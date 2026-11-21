@@ -11,6 +11,10 @@ set -eu
 repo="$1" version="$2" out="$3"; shift 3
 echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "release-manifest: '$version' is not X.Y.Z" >&2; exit 2; }
 [ -f CHANGELOG.md ] || { echo "release-manifest: no CHANGELOG.md here" >&2; exit 1; }
+# ASSETS: the caller's asset list (release.yml passes its input); named assets that reach the script as no file at all
+# would ship a release.json without their sha256, which a tool reading it (ade) refuses to install from
+if [ -n "$(printf '%s' "${ASSETS:-}" | tr -d ' \t\n')" ] && [ $# -eq 0 ]; then
+  echo "release-manifest: the caller named assets (ASSETS=${ASSETS}) but none reached the script; nothing written" >&2; exit 1; fi
 python3 - "$repo" "$version" "$out" "${RELEASED:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" "${RELEASE_BASE:-https://github.com}" "$@" <<'PY'
 import hashlib, json, os, re, sys
 repo, version, out, released, base, assets = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6:]

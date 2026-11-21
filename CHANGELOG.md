@@ -6,6 +6,8 @@
   notes_url, summary, urgency `security` when the section has a `Security:` line, min_supported from an optional
   `MIN_SUPPORTED` file, and the URL and sha256 of each asset); new input `assets` lists files to attach. A `ci`
   workflow runs `tests/test_release_manifest.sh`.
+- `scripts/release-manifest.sh` refuses an empty file list when the caller named assets (`ASSETS`, which `release.yml` passes), so
+  a release whose assets went missing never ships a `release.json` without their sha256.
 
 ## 1.1.1
 

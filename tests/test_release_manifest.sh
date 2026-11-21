@@ -36,4 +36,9 @@ bash "$S" better-ade/ade-cli 9.9.9 none.json 2> /dev/null && fail "a version wit
 bash "$S" better-ade/ade-cli 1.2.0 x.json missing 2> /dev/null && fail "a missing asset is refused"
 echo bad > MIN_SUPPORTED; bash "$S" better-ade/ade-cli 1.2.0 x.json 2> /dev/null && fail "a bad MIN_SUPPORTED is refused"
 bash "$S" better-ade/ade-cli 1.2 x.json 2> /dev/null && fail "a bad version is refused"
+rm -f MIN_SUPPORTED
+ASSETS="ade install.sh" bash "$S" better-ade/ade-cli 1.2.0 x.json 2> err && fail "assets named by the caller but no file given is refused"
+grep -q "named assets" err || fail "says why"
+ASSETS="  " bash "$S" better-ade/ade-cli 1.2.0 x.json || fail "a blank ASSETS is no assets"
+ASSETS="ade" bash "$S" better-ade/ade-cli 1.2.0 x.json ade || fail "assets named and given"
 echo ok
