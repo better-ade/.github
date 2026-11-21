@@ -14,3 +14,12 @@ A repo calls them:
 jobs:
   ci: { uses: better-ade/.github/.github/workflows/verify.yml@v1, with: { command: "bash tests/run.sh" } }
 ```
+
+## Commit and PR standard (every better-ade repo)
+
+- **Pull requests** use `pull_request_template.md` (GitHub applies it to every repo in the org without its own):
+  Overview, Implementation details, Verification (real output, who ran it, review by risk), Definition of Done
+  checklist, Related PRs, issues, stories and ADRs.
+- **Commits** follow `commit-template.txt` (`git config commit.template <path>`): a one-line summary, then Overview,
+  Implementation, Verification, Done and Related.
+- Commits and PRs go out under the author's own git identity, with no AI attribution.
