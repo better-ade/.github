@@ -6,6 +6,9 @@ Shared CI/CD for every better-ade repo, so they all work the same way:
 - **CI** (`verify.yml`): every pull request and push to main runs the repo's verification command and a gitleaks scan.
 - **CD** (`release.yml`): when `VERSION` on main names a version with no tag yet, the checks run, then `vX.Y.Z` is tagged
   and released with that version's changelog section. Bump `VERSION` and add the changelog section in the same PR.
+  Each release also carries `release.json` (`scripts/release-manifest.sh`): version, a one-line summary, `urgency`
+  (`security` when the section has a `Security:` line), `min_supported` (an optional `MIN_SUPPORTED` file) and the
+  sha256 of each asset named in the `assets` input. `ade` reads it to announce and verify updates.
 - main requires the `ci` check.
 
 A repo calls them:
