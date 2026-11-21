@@ -1,0 +1,32 @@
+# Reusable CD: when VERSION on main names a version with no tag yet, run the verification command, then tag
+# vX.Y.Z and publish a GitHub Release whose notes are that version's CHANGELOG.md section.
+name: release
+on:
+  workflow_call:
+    inputs:
+      command: { type: string, required: true }
+      runs-on: { type: string, default: ubuntu-latest }
+      setup: { type: string, default: "" }
+permissions: { contents: write }
+jobs:
+  release:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: { fetch-depth: 0 }
+      - id: v
+        run: |
+          v=$(tr -d ' \n' < VERSION)
+          echo "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::VERSION '$v' is not X.Y.Z"; exit 1; }
+          if git rev-parse -q --verify "refs/tags/v$v" >/dev/null; then echo "skip=1" >> "$GITHUB_OUTPUT"; echo "::notice::v$v already released"; fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - if: steps.v.outputs.skip != '1' && inputs.setup != ''
+        run: ${{ inputs.setup }}
+      - if: steps.v.outputs.skip != '1'
+        run: ${{ inputs.command }}
+      - if: steps.v.outputs.skip != '1'
+        env: { GH_TOKEN: "${{ github.token }}", V: "${{ steps.v.outputs.version }}" }
+        run: |
+          awk -v v="$V" '/^## /{p = ($2 == v || $2 == "v"v || $2 == "["v"]")} p' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          [ -s "$RUNNER_TEMP/notes.md" ] || { echo "::error::CHANGELOG.md has no '## $V' section"; exit 1; }
+          gh release create "v$V" --target "$GITHUB_SHA" --title "v$V" --notes-file "$RUNNER_TEMP/notes.md"
