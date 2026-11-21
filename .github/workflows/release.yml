@@ -1,5 +1,7 @@
 # Reusable CD: when VERSION on main names a version with no tag yet, run the verification command, then tag
-# vX.Y.Z and publish a GitHub Release whose notes are that version's CHANGELOG.md section.
+# vX.Y.Z and publish a GitHub Release whose notes are that version's CHANGELOG.md section. Every release carries
+# release.json (scripts/release-manifest.sh of this repo: version, summary, urgency, min_supported, sha256 per asset)
+# and the listed assets.
 name: release
 on:
   workflow_call:
@@ -7,6 +9,7 @@ on:
       command: { type: string, required: true }
       runs-on: { type: string, default: ubuntu-latest }
       setup: { type: string, default: "" }
+      assets: { type: string, default: "" }   # space-separated files attached to the release (and hashed in release.json)
 permissions: { contents: write }
 jobs:
   release:
@@ -30,3 +33,12 @@ jobs:
           awk -v v="$V" '/^## /{p = ($2 == v || $2 == "v"v || $2 == "["v"]")} p' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
           [ -s "$RUNNER_TEMP/notes.md" ] || { echo "::error::CHANGELOG.md has no '## $V' section"; exit 1; }
           gh release create "v$V" --target "$GITHUB_SHA" --title "v$V" --notes-file "$RUNNER_TEMP/notes.md"
+      - if: steps.v.outputs.skip != '1'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: { repository: better-ade/.github, ref: v1, path: .release-tools }
+      - if: steps.v.outputs.skip != '1'
+        env: { GH_TOKEN: "${{ github.token }}", V: "${{ steps.v.outputs.version }}", ASSETS: "${{ inputs.assets }}" }
+        run: |
+          # shellcheck disable=SC2086  # ASSETS is a space-separated list on purpose
+          bash .release-tools/scripts/release-manifest.sh "$GITHUB_REPOSITORY" "$V" "$RUNNER_TEMP/release.json" $ASSETS
+          gh release upload "v$V" "$RUNNER_TEMP/release.json" $ASSETS
