@@ -18,6 +18,13 @@ jobs:
   ci: { uses: better-ade/.github/.github/workflows/verify.yml@v1, with: { command: "bash tests/run.sh" } }
 ```
 
+Both take `command` (required), `runs-on` (default `ubuntu-latest`) and `setup` (shell lines run first); `verify.yml`
+also takes `timeout-minutes` (default 45), `release.yml` also `assets` (files to attach and hash in `release.json`).
+The `v1` tag is today at 1.2.0.
+
+This repo also holds the organisation's profile page, [`profile/README.md`](profile/README.md), which links every
+better-ade repo and the website, [ade.ardata.tech](https://ade.ardata.tech/).
+
 ## Commit and PR standard (every better-ade repo)
 
 - **Pull requests** use `pull_request_template.md` (GitHub applies it to every repo in the org without its own):
